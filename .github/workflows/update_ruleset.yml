@@ -1,0 +1,222 @@
+name: Rule-Set Update
+
+on:
+  schedule:
+    - cron: '0 20 * * 0'
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: rule-set
+
+      - name: Install Sing-Box
+        id: sing-box
+        run: |
+          sudo apt-get update && sudo apt-get install -y curl jq
+          version=$(curl -s https://api.github.com/repos/SagerNet/sing-box/releases | jq -r .[0].tag_name)
+          url="https://github.com/SagerNet/sing-box/releases/download/$version/sing-box-$(echo $version | sed 's/v//')-linux-amd64.tar.gz"
+          curl -L $url | tar xz -C /tmp/
+          sudo mv /tmp/sing-box-$(echo $version | sed 's/v//')-linux-amd64/sing-box /usr/local/bin/sing-box
+          sing-box version
+          if [ $? -eq 0 ]; then
+            echo "status=success" >> "$GITHUB_OUTPUT"
+
+      - name: Write Python script
+        id: write-python-script
+        run: |
+          cat <<EOF > /tmp/update_ruleset.py
+          import sys
+          import subprocess
+          import requests
+          import json
+          import dataclasses
+          from typing import List, Dict, Any, Union, Optional
+
+          @dataclasses.dataclass
+          class Rule:
+              query_type: Optional[List[Union[str, int]]] = None
+              network: Optional[List[str]] = None
+              domain: Optional[List[str]] = None
+              domain_suffix: Optional[List[str]] = None
+              domain_keyword: Optional[List[str]] = None
+              domain_regex: Optional[List[str]] = None
+              source_ip_cidr: Optional[List[str]] = None
+              ip_cidr: Optional[List[str]] = None
+              source_port: Optional[List[int]] = None
+              source_port_range: Optional[List[str]] = None
+              port: Optional[List[int]] = None
+              port_range: Optional[List[str]] = None
+              process_name: Optional[List[str]] = None
+              process_path: Optional[List[str]] = None
+              process_path_regex: Optional[List[str]] = None
+              package_name: Optional[List[str]] = None
+              network_type: Optional[List[str]] = None
+              network_is_expensive: Optional[bool] = None
+              network_is_constrained: Optional[bool] = None
+              wifi_ssid: Optional[List[str]] = None
+              wifi_bssid: Optional[List[str]] = None
+              invert: Optional[bool] = None
+
+              def to_dict(self) -> Dict[str, Any]:
+                return {k: v for k, v in dataclasses.asdict(self).items() if v is not None}
+              
+              @classmethod
+              def parse_rule(cls, file: str) -> 'Rule':
+                  rule = cls()
+                  file_map = {
+                      'QUERY-TYPE': 'query_type',
+                      'NETWORK': 'network',
+                      'DOMAIN': 'domain',
+                      'DOMAIN-SUFFIX': 'domain_suffix',
+                      'DOMAIN-KEYWORD': 'domain_keyword',
+                      'DOMAIN-REGEX': 'domain_regex',
+                      'SOURCE-IP-CIDR': 'source_ip_cidr',
+                      'IP-CIDR': 'ip_cidr',
+                      'SOURCE-PORT': 'source_port',
+                      'SOURCE-PORT-RANGE': 'source_port_range',
+                      'PORT': 'port',
+                      'PORT-RANGE': 'port_range',
+                      'PROCESS-NAME': 'process_name',
+                      'PROCESS-PATH': 'process_path',
+                      'PROCESS-PATH-REGEX': 'process_path_regex',
+                      'PACKAGE-NAME': 'package_name',
+                      'NETWORK-TYPE': 'network_type',
+                      'NETWORK-IS-EXPENSIVE': 'network_is_expensive',
+                      'NETWORK-IS-CONSTRAINED': 'network_is_constrained',
+                      'WIFI-SSID': 'wifi_ssid',
+                      'WIFI-BSSID': 'wifi_bssid',
+                      'INVERT': 'invert'
+                  }
+
+                  with open(file, 'r', encoding='utf8') as f:
+                      for line in f:
+                          line = line.strip()
+                          if not line or line.startswith('#'):
+                              continue
+                          parts = line.split(',', 2)
+                          if len(parts) <= 2:
+                              continue
+                          prefix, value = parts[:2]
+                          field_name = file_map.get(prefix)
+                          if field_name:
+                              field_value = getattr(rule, field_name)
+                              if field_value is None:
+                                  field_value = []
+                                  setattr(rule, field_name, field_value)
+                              if isinstance(field_value, list):
+                                  field_value.append(value)
+                              else:
+                                  setattr(rule, field_name, value == 'true')
+
+                  return rule
+          def save_rule(rule: Rule, file: str):
+            with open(file, 'w', encoding='utf8') as f:
+                json.dump({"version": 1, "rules": [rule.to_dict()]}, f, ensure_ascii=False, indent=2)
+
+          response = requests.get('https://api.github.com/repos/ACL4SSR/ACL4SSR/git/trees/master').json()
+          clash_tree_url = next(item['url'] for item in response['tree'] if item['path'] == 'Clash')
+          clash_tree = requests.get(clash_tree_url).json()
+          ruleset_tree_url = next(item['url'] for item in clash_tree['tree'] if item['path'] == 'Ruleset')
+          ruleset_tree = requests.get(ruleset_tree_url).json()
+
+          for item in ruleset_tree['tree']:
+              if item['path'].endswith('.list'):
+                  list_file = f'/tmp/{item["path"]}'
+                  json_file = list_file.replace('.list', '.json')
+                  srs_file = item['path'].replace('.list', '.srs')
+                  url = f'https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Ruleset/{item["path"]}'
+                  subprocess.run(['wget', url, '-O', list_file])
+                  save_rule(Rule.parse_rule(list_file), json_file)
+                  singbox_format = subprocess.run(['sing-box', 'rule-set', 'format', json_file, '-w'], stdout=subprocess.PIPE)
+                  if singbox_format.returncode == 0:
+                      subprocess.run(['sing-box', 'rule-set', 'compile', json_file, '-o', srs_file])
+                      print(f'{item["path"]} generated successfully!')
+                  else:
+                      print(f'Error: {item["path"]}: {singbox_format.stdout.decode()}')
+
+          for item in clash_tree['tree']:
+              if item['path'].endswith('.list'):
+                  list_file = f'/tmp/{item["path"]}'
+                  json_file = list_file.replace('.list', '.json')
+                  srs_file = item['path'].replace('.list', '.srs')
+                  url = f'https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/{item["path"]}'
+                  subprocess.run(['wget', url, '-O', list_file])
+                  save_rule(Rule.parse_rule(list_file), json_file)
+                  singbox_format = subprocess.run(['sing-box', 'rule-set', 'format','-w', json_file], stdout=subprocess.PIPE)
+                  if singbox_format.returncode == 0:
+                      subprocess.run(['sing-box', 'rule-set', 'compile', json_file, '-o', srs_file])
+                      print(f'{item["path"]} generated successfully!')
+                  else:
+                      print(f'Error: {item["path"]}: {singbox_format.stdout.decode()}')response = requests.get('https://api.github.com/repos/ACL4SSR/ACL4SSR/git/trees/master').json()
+          clash_tree_url = next(item['url'] for item in response['tree'] if item['path'] == 'Clash')
+          clash_tree = requests.get(clash_tree_url).json()
+          ruleset_tree_url = next(item['url'] for item in clash_tree['tree'] if item['path'] == 'Ruleset')
+          ruleset_tree = requests.get(ruleset_tree_url).json()
+
+          for item in ruleset_tree['tree']:
+              if item['path'].endswith('.list'):
+                  list_file = f'/tmp/{item["path"]}'
+                  json_file = list_file.replace('.list', '.json')
+                  srs_file = item['path'].replace('.list', '.srs')
+                  url = f'https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Ruleset/{item["path"]}'
+                  subprocess.run(['wget', url, '-O', list_file])
+                  save_rule(Rule.parse_rule(list_file), json_file)
+                  singbox_format = subprocess.run(['sing-box', 'rule-set', 'format', json_file, '-w'], stdout=subprocess.PIPE)
+                  if singbox_format.returncode == 0:
+                      subprocess.run(['sing-box', 'rule-set', 'compile', json_file, '-o', srs_file])
+                      print(f'{item["path"]} generated successfully!')
+                  else:
+                      print(f'Error: {item["path"]}: {singbox_format.stdout.decode()}')
+
+          for item in clash_tree['tree']:
+              if item['path'].endswith('.list'):
+                  list_file = f'/tmp/{item["path"]}'
+                  json_file = list_file.replace('.list', '.json')
+                  srs_file = item['path'].replace('.list', '.srs')
+                  url = f'https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/{item["path"]}'
+                  subprocess.run(['wget', url, '-O', list_file])
+                  save_rule(Rule.parse_rule(list_file), json_file)
+                  singbox_format = subprocess.run(['sing-box', 'rule-set', 'format','-w', json_file], stdout=subprocess.PIPE)
+                  if singbox_format.returncode == 0:
+                      subprocess.run(['sing-box', 'rule-set', 'compile', json_file, '-o', srs_file])
+                      print(f'{item["path"]} generated successfully!')
+                  else:
+                      print(f'Error: {item["path"]}: {singbox_format.stdout.decode()}')
+          EOF
+          echo "status=success" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Run Python script
+        id: run-python-script
+        if: steps.write-python-script.outputs.status == 'success'
+        run: |
+          pip install requests
+          pip install dataclasses
+          python /tmp/update_ruleset.py
+          if [ $? -eq 0 ]; then
+            echo "status=success" >> "$GITHUB_OUTPUT"
+          else
+            echo "status=error" >> "$GITHUB_OUTPUT"
+          fi
+        
+      - name: Upload generated files
+        id: upload-generated-files
+        if: steps.run-python-script.outputs.status == 'success'
+        run: |
+          date=$(date '+%Y-%m-%d')
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .
+          if [ -n "$(git status --porcelain)" ]; then
+            git commit -m "Update ruleset $date"
+            git push
+            echo "status=success" >> "$GITHUB_OUTPUT"
+          else
+            echo "status=unchanged" >> "$GITHUB_OUTPUT"
+          fi
