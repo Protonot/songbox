@@ -1,0 +1,64 @@
+{
+    "admin/services/songbox": {
+        "title": "SongBox",
+        "order": 10,
+        "description": "SongBox",
+        "action": {
+            "type": "firstchild"
+        },
+        "depends": {
+            "acl": [ "luci-app-songbox" ],
+            "uci": { "songbox": true }
+        }
+    },
+
+    "admin/services/songbox/client": {
+        "title": "Client",
+        "order": 1,
+        "description": "Client",
+        "action": {
+            "type": "view",
+            "path": "songbox/client"
+        }
+    },
+
+    "admin/services/songbox/bound": {
+        "title": "Bound Settings",
+        "order": 2,
+        "description": "Bound Settings",
+        "action": {
+            "type": "view",
+            "path": "songbox/bound"
+        }
+    },
+
+    "admin/services/songbox/dns": {
+        "title": "DNS Settings",
+        "order": 3,
+        "description": "DNS Settings",
+        "action": {
+            "type": "view",
+            "path": "songbox/dns"
+        }
+    },
+
+    "admin/services/songbox/route": {
+        "title": "Route Settings",
+        "order": 4,
+        "description": "Route Settings",
+        "action": {
+            "type": "view",
+            "path": "songbox/route"
+        }
+    },
+
+    "admin/services/songbox/status": {
+        "title": "Status",
+        "order": 5,
+        "description": "Status",
+        "action": {
+            "type": "view",
+            "path": "songbox/status"
+        }
+    }
+}

@@ -1,0 +1,14 @@
+#!/bin/sh
+
+ipaddr=`(uci -q get network.lan.ipaddr)`
+secret=`(head -c 16 /dev/urandom | md5sum | cut -c1-6)`
+
+uci -q batch << EOF >"/dev/null"
+    set songbox.experimental.external_controller="$ipaddr:9090"
+    set songbox.experimental.secret=$secret
+    commit songbox
+EOF
+
+# /usr/libexec/rpcd/songbox/update_rule-set.sh
+
+return 0

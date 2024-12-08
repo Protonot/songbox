@@ -21,7 +21,7 @@ jobs:
           curl -L $url | tar xz -C /tmp/
           sudo mv /tmp/sing-box-$(echo $version | sed 's/v//')-linux-amd64/sing-box /usr/local/bin/sing-box
           sing-box version
-          if [ $? -eq 0 ]; then
+          if [[ $? -eq 0 ]]; then
             echo "status=success" >> "$GITHUB_OUTPUT"
 
       - name: Write Python script

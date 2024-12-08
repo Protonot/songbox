@@ -1,0 +1,11 @@
+{
+    "luci-app-songbox": {
+        "description": "Allow access to the SongBox application",
+        "read": {
+            "uci": [ "songbox" ]
+        },
+        "write": {
+            "uci": [ "songbox" ]
+        }
+    }
+}
