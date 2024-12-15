@@ -5,7 +5,7 @@ config client 'client'
 config log 'log'
 	option disabled 'false'
 	option level 'info'
-	option output '/var/log/singbox.log'
+	option output '/var/run/songbox/singbox.log'
 	option timestamp 'true'
 
 config ntp 'ntp'

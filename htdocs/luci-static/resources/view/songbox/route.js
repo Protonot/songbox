@@ -9,7 +9,7 @@ return view.extend({
     render: function() {
         var m, s, o;
 
-        m = new form.Map('songbox', _('SongBox Route'), _('Based on Sing-box, a universal proxy platform'));
+        m = new form.Map('songbox');
 
         //Route Rules Setting
         s = m.section(form.GridSection, 'route_rules', _('Route Rules Setting'));
@@ -51,22 +51,20 @@ return view.extend({
         o.depends('action', 'route');
         o.depends('action', 'route-options');
 
-        o = s.taboption('general', form.ListValue, 'udp_disable_domain_unmapping', _('UDP Disable Domain Unmapping'),
+        o = s.taboption('general', form.Flag, 'udp_disable_domain_unmapping', _('UDP Disable Domain Unmapping'),
             _('If enabled, for UDP proxy requests addressed to a domain, the original packet address will be sent in the response instead of the mapped domain.'));
-        o.value('false', _('False'));
-        o.value('true', _('True'));
-        o.value('', _(''));
-        o.default = '';
+        o.enabled = 'true';
+        o.disabled = 'false';
+        o.default = 'false';
         o.depends('action', 'route');
         o.depends('action', 'route-options');
         o.modalonly = true;
 
-        o = s.taboption('general', form.ListValue, 'udp_connect', _('UDP Connect'),
+        o = s.taboption('general', form.Flag, 'udp_connect', _('UDP Connect'),
             _('If enabled, attempts to connect UDP connection to the destination instead of listen.'));
-        o.value('false', _('False'));
-        o.value('true', _('True'));
-        o.value('', _(''));
-        o.default = '';
+        o.enabled = 'true';
+        o.disabled = 'false';
+        o.default = 'false';
         o.depends('action', 'route');
         o.depends('action', 'route-options');
         o.modalonly = true;
@@ -84,10 +82,10 @@ return view.extend({
         o.depends('action', 'reject');
         o.modalonly = true;
 
-        o = s.taboption('general', form.ListValue, 'no_drop', _('No Drop'),
+        o = s.taboption('general', form.Flag, 'no_drop', _('No Drop'),
             _('If not enabled, method will be temporarily overwritten to drop after 50 triggers in 30s. Not available when method is set to drop.'));
-        o.value('false', _('False'));
-        o.value('true', _('True'));
+        o.enabled = 'true';
+        o.disabled = 'false';
         o.rmempty = true;
         o.depends('action', 'reject');
         o.modalonly = true;
@@ -191,11 +189,10 @@ return view.extend({
         o.datatype = 'ipaddr';
         o.modalonly = true;
 
-        o = s.taboption('advanced', form.ListValue, 'source_ip_is_private', _('Source IP is Private'), _('Match non-public source IP.'));
-        o.value('false', _('False'));
-        o.value('true', _('True'));
-        o.value('', _(''));
-        o.default = '';
+        o = s.taboption('advanced', form.Flag, 'source_ip_is_private', _('Source IP is Private'), _('Match non-public source IP.'));
+        o.enabled = 'true';
+        o.disabled = 'false';
+        o.default = 'false';
         o.modalonly = true;
 
         o = s.taboption('advanced', form.DynamicList, 'source_port', _('Source Port'), _('Match source port.'));
@@ -223,17 +220,16 @@ return view.extend({
         o.datatype = 'ipaddr';
         o.modalonly = true;
 
-        o = s.taboption('advanced', form.ListValue, 'ip_is_private', _('IP is Private'), _('Match non-public IP.'));
-        o.value('false', _('False'));
-        o.value('true', _('True'));
-        o.value('', _(''));
-        o.default = '';
+        o = s.taboption('advanced', form.Flag, 'ip_is_private', _('IP is Private'), _('Match non-public IP.'));
+        o.enabled = 'true';
+        o.disabled = 'false';
+        o.default = 'false';
         o.modalonly = true;
 
-        o = s.taboption('advanced', form.ListValue, 'rule_set_ip_cidr_accept_empty', _('Make ip_cidr rules in rule-sets accept empty query response.'));
-        o.value('false', _('False'));
-        o.value('true', _('True'));
-        o.value('', _(''));
+        o = s.taboption('advanced', form.Flag, 'rule_set_ip_cidr_accept_empty', _('Make ip_cidr rules in rule-sets accept empty query response.'));
+        o.enabled = 'true';
+        o.disabled = 'false';
+        o.default = 'false';
         o.modalonly = true;
 
         o = s.taboption('advanced', form.ListValue, 'clash_mode', _('Clash Mode'), _('Clash mode.'));
@@ -244,11 +240,10 @@ return view.extend({
         o.default = '';
         o.modalonly = true;
 
-        o = s.taboption('advanced', form.ListValue, 'invert', _('Invert'), _('Invert match result.'));
-        o.value('false', _('False'));
-        o.value('true', _('True'));
-        o.value('', _(''));
-        o.default = '';
+        o = s.taboption('advanced', form.Flag, 'invert', _('Invert'), _('Invert match result.'));
+        o.enabled = 'true';
+        o.disabled = 'false';
+        o.default = 'false';
         o.modalonly = true;
 
         // ============================================

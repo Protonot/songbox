@@ -8,7 +8,7 @@ return view.extend({
     render: function() {
         var m, s, o;
 
-        m = new form.Map('songbox', _('SongBox DNS'), _('Based on Sing-box, a universal proxy platform'));
+        m = new form.Map('songbox');
 
         s = m.section(form.GridSection, 'dns_server', _('DNS Server Setting'));
         s.anonymous = true;
@@ -93,11 +93,10 @@ return view.extend({
         o.rmempty = false;
         o.depends('action', 'route');
 
-        o = s.taboption('general', form.ListValue, 'disable_cache', _('Disable Cache'), _('Disable cache and save cache in this query.'));
-        o.value('false', _('False'));
-        o.value('true', _('True'));
-        o.value('', _(''));
-        o.default = '';
+        o = s.taboption('general', form.Flag, 'disable_cache', _('Disable Cache'), _('Disable cache and save cache in this query.'));
+        o.enabled = 'true';
+        o.disabled = 'false';
+        o.default = 'false';
         o.depends('action', 'route');
         o.depends('action', 'route-options');
         o.modalonly = true;
@@ -120,10 +119,11 @@ return view.extend({
         o.depends('action', 'reject');
         o.modalonly = true;
 
-        o = s.taboption('general', form.ListValue, 'no_drop', _('No Drop'),
+        o = s.taboption('general', form.Flag, 'no_drop', _('No Drop'),
             _('If not enabled, method will be temporarily overwritten to drop after 50 triggers in 30s. Not available when method is set to drop.'));
-        o.value('false', _('False'));
-        o.value('true', _('True'));
+        o.enabled = 'true';
+        o.disabled = 'false';
+        o.default = 'false';
         o.rmempty = true;
         o.depends('action', 'reject');
         o.modalonly = true;
@@ -186,11 +186,10 @@ return view.extend({
         o.datatype = 'ipaddr';
         o.modalonly = true;
 
-        o = s.taboption('advanced', form.ListValue, 'source_ip_is_private', _('Source IP is Private'), _('Match non-public source IP.'));
-        o.value('false', _('False'));
-        o.value('true', _('True'));
-        o.value('', _(''));
-        o.default = '';
+        o = s.taboption('advanced', form.Flag, 'source_ip_is_private', _('Source IP is Private'), _('Match non-public source IP.'));
+        o.enabled = 'true';
+        o.disabled = 'false';
+        o.default = 'false';
         o.modalonly = true;
 
         o = s.taboption('advanced', form.DynamicList, 'source_port', _('Source Port'), _('Match source port.'));
@@ -218,17 +217,16 @@ return view.extend({
         o.datatype = 'ipaddr';
         o.modalonly = true;
 
-        o = s.taboption('advanced', form.ListValue, 'ip_is_private', _('IP is Private'), _('Match private IP with query response.'));
-        o.value('false', _('False'));
-        o.value('true', _('True'));
-        o.value('', _(''));
-        o.default = '';
+        o = s.taboption('advanced', form.Flag, 'ip_is_private', _('IP is Private'), _('Match private IP with query response.'));
+        o.enabled = 'true';
+        o.disabled = 'false';
+        o.default = 'false';
         o.modalonly = true;
 
-        o = s.taboption('advanced', form.ListValue, 'rule_set_ip_cidr_accept_empty', _('Make ip_cidr rules in rule-sets accept empty query response.'));
-        o.value('false', _('False'));
-        o.value('true', _('True'));
-        o.value('', _(''));
+        o = s.taboption('advanced', form.Flag, 'rule_set_ip_cidr_accept_empty', _('Make ip_cidr rules in rule-sets accept empty query response.'));
+        o.enabled = 'true';
+        o.disabled = 'false';
+        o.default = 'false';
         o.modalonly = true;
 
         o = s.taboption('advanced', form.ListValue, 'clash_mode', _('Clash Mode'), _('Clash mode.'));
@@ -239,11 +237,10 @@ return view.extend({
         o.default = '';
         o.modalonly = true;
 
-        o = s.taboption('advanced', form.ListValue, 'invert', _('Invert'), _('Invert match result.'));
-        o.value('false', _('False'));
-        o.value('true', _('True'));
-        o.value('', _(''));
-        o.default = '';
+        o = s.taboption('advanced', form.Flag, 'invert', _('Invert'), _('Invert match result.'));
+        o.enabled = 'true';
+        o.disabled = 'false';
+        o.default = 'false';
         o.modalonly = true;
 
         // ============================================
@@ -284,33 +281,29 @@ return view.extend({
         o.value('ipv6_only', _('IPv6 Only'));
         o.default = '';
 
-        o = s.option(form.ListValue, 'disable_cache', _('Disable Cache'), _('Disable dns cache.'));
-        o.value('false', _('False'));
-        o.value('true', _('True'));
-        o.value('', _(''));
-        o.default = '';
+        o = s.option(form.Flag, 'disable_cache', _('Disable Cache'), _('Disable dns cache.'));
+        o.enabled = 'true';
+        o.disabled = 'false';
+        o.default = 'false';
 
-        o = s.option(form.ListValue, 'disable_expire', _('Disable Expire'), _('Disable dns cache expire.'));
-        o.value('false', _('False'));
-        o.value('true', _('True'));
-        o.value('', _(''));
-        o.default = '';
+        o = s.option(form.Flag, 'disable_expire', _('Disable Expire'), _('Disable dns cache expire.'));
+        o.enabled = 'true';
+        o.disabled = 'false';
+        o.default = 'false';
 
-        o = s.option(form.ListValue, 'independent_cache', _('Independent Cache'), _('Make each DNS server\'s cache independent for special purposes. If enabled, will slightly degrade performance.'));
-        o.value('false', _('False'));
-        o.value('true', _('True'));
-        o.value('', _(''));
+        o = s.option(form.Flag, 'independent_cache', _('Independent Cache'), _('Make each DNS server\'s cache independent for special purposes. If enabled, will slightly degrade performance.'));
+        o.enabled = 'true';
+        o.disabled = 'false';
         o.default = true;
 
         o = s.option(form.Value, 'cache_capacity', _('Cache Capacity'), _('LRU cache capacity.'));
         o.datatype = 'uinteger';
         o.rmempty = true;
 
-        o = s.option(form.ListValue, 'reverse_mapping', _('Reverse Mapping'), _('Enable reverse mapping.'));
-        o.value('false', _('False'));
-        o.value('true', _('True'));
-        o.value('', _(''));
-        o.default = '';
+        o = s.option(form.Flag, 'reverse_mapping', _('Reverse Mapping'), _('Enable reverse mapping.'));
+        o.enabled = 'true';
+        o.disabled = 'false';
+        o.default = 'false';
 
         o = s.option(form.Value, 'client_subnet', _('Client Subnet'));
         o.rmempty = true;

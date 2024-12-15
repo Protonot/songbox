@@ -42,8 +42,8 @@ return view.extend({
         o.default = 'info';
         o.depends('disabled', 'false');
 
-        o = s.option(form.Value, 'output', _('Output'), _('Output file path. Will not write log to console after enable.'));
-        o.default = '/var/log/singbox.log';
+        o = s.option(form.HiddenValue, 'output');
+        o.default = '/var/run/songbox/singbox.log';
         o.readonly = true;
         o.depends('disabled', 'false');
 
@@ -111,7 +111,7 @@ return view.extend({
         o.rmempty = false;
         o.depends('enabled', 'true');
 
-        o = s.taboption('cache', form.Value, 'rdrc_timeout rdrc', _('RDRC Timeout'), _('Timeout of rejected DNS response cache.'));
+        o = s.taboption('cache', form.Value, 'rdrc_timeout', _('RDRC Timeout'), _('Timeout of rejected DNS response cache.'));
         o.placeholder = '7d';
 
         o = s.taboption('clash_api', form.Value, 'external_controller', _('External Controller'));

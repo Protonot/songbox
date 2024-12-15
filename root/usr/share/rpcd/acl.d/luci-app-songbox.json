@@ -2,10 +2,18 @@
     "luci-app-songbox": {
         "description": "Allow access to the SongBox application",
         "read": {
-            "uci": [ "songbox" ]
+            "uci": [ "songbox" ],
+            "file": {
+                "/var/run/songbox/run.log": [ "read" ],
+                "/var/run/songbox/singbox.log": [ "read" ]
+            }
         },
         "write": {
-            "uci": [ "songbox" ]
+            "uci": [ "songbox" ],
+            "file": {
+                "/var/run/songbox/run.log": [ "write" ],
+                "/var/run/songbox/singbox.log": [ "write" ]
+            }
         }
     }
 }
