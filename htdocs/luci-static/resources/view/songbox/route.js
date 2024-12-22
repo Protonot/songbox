@@ -36,7 +36,6 @@ return view.extend({
         o.default = 'route';
 
         o = s.taboption('general', form.MultiValue, 'outbound', _('Outbound'), _('Tag of target outbound.'));
-        o.value('', _(''));
         songbox.updateOptions('outbound', o);
         o.rmempty = false;
         o.depends('action', 'route');
@@ -128,11 +127,9 @@ return view.extend({
         // ============================================
 
         o = s.taboption('general', form.MultiValue, 'rule_set', _('Rule Set'), _('Match rule set.'));
-        o.value('', _(''));
         songbox.updateOptions('global_rule_sets', o);
 
         o = s.taboption('general', form.MultiValue, 'inbound', _('Inbound'), _('The tag of the inbound.'));
-        o.value('', _(''));
         songbox.updateOptions('inbound', o);
 
         o = s.taboption('general', form.ListValue, 'ip_version', _('IP Version'), _('Not limited if empty.'));
@@ -221,12 +218,6 @@ return view.extend({
         o.modalonly = true;
 
         o = s.taboption('advanced', form.Flag, 'ip_is_private', _('IP is Private'), _('Match non-public IP.'));
-        o.enabled = 'true';
-        o.disabled = 'false';
-        o.default = 'false';
-        o.modalonly = true;
-
-        o = s.taboption('advanced', form.Flag, 'rule_set_ip_cidr_accept_empty', _('Make ip_cidr rules in rule-sets accept empty query response.'));
         o.enabled = 'true';
         o.disabled = 'false';
         o.default = 'false';

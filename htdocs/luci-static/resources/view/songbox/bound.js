@@ -56,10 +56,12 @@ return view.extend({
         o.depends('type', 'mixed');
         o.depends('type', 'socks');
         o.depends('type', 'http');
+        o.depends('type', 'naive');
+
+        o = s.taboption('general', form.Value, 'users_name', _('Name'));
         o.depends('type', 'shadowsocks');
         o.depends('type', 'vmess');
         o.depends('type', 'trojan');
-        o.depends('type', 'naive');
         o.depends('type', 'hysteria');
         o.depends({ type: 'shadowtls', "version": '3' });
         o.depends('type', 'vless');
@@ -88,10 +90,6 @@ return view.extend({
         o.value('', _(''));
         o.value('xtls-rprx-vision', _('XTLS-RPRX-Vision'));
         o.depends('type', 'vless');
-        o.modalonly = true;
-
-        o = s.taboption('general', form.Value, 'users_auth', _('Auth'));
-        o.depends('type', 'hysteria');
         o.modalonly = true;
 
         o = s.taboption('general', form.Value, 'users_auth', _('Auth'), _('Authentication password, in base64.'));
@@ -260,10 +258,24 @@ return view.extend({
         o.depends('fallback_enabled', '1');
 
         o = s.taboption('general', form.Value, 'fallback_port', _('Fallback Port'));
-        o.placeholder = '443';
+        o.placeholder = '8080';
         o.datatype = 'port';
         o.modalonly = true;
         o.depends('fallback_enabled', '1');
+
+        o = s.taboption('general', form.Flag, 'fallback_for_alpn', _('Fallback For ALPN'), _('Fallback server configuration for specified ALPN.'));
+        o.modalonly = true;
+        o.depends('type', 'trojan');
+
+        o = s.taboption('general', form.Value, 'fallback_alpn_server', _('Fallback ALPN Server'));
+        o.modalonly = true;
+        o.depends('fallback_for_alpn', '1');
+
+        o = s.taboption('general', form.Value, 'fallback_alpn_port', _('Fallback ALPN Port'));
+        o.placeholder = '8081';
+        o.datatype = 'port';
+        o.modalonly = true;
+        o.depends('fallback_for_alpn', '1');
 
         o = s.taboption('general', form.Value, 'up', _('Up'));
         o.validate = songbox.validateBandwidth;
@@ -340,6 +352,19 @@ return view.extend({
         o.disabled = 'false';
         o.default = 'false';
         o.depends({ type: 'shadowtls', "version": '3' });
+
+        o = s.taboption('general', form.Value, 'handshake_server', _('Handshake Server'));
+        o.placeholder = 'google.com';
+        o.rmempty = false;
+        o.depends('type', 'shadowtls');
+        o.modalonly = true;
+
+        o = s.taboption('general', form.Value, 'handshake_port', _('Handshake Port'));
+        o.placeholder = '443';
+        o.datatype = 'port';
+        o.rmempty = false;
+        o.depends('type', 'shadowtls');
+        o.modalonly = true;
 
         o = s.taboption('general', form.ListValue, 'congestion_control', _('Congestion Control'));
         o.value('cubic', _('Cubic'));
@@ -465,13 +490,15 @@ return view.extend({
         o.modalonly = true;
         o.depends('auto_route', 'true');
 
-        o = s.taboption('general', form.DynamicList, 'route_address_set', _('Route Address Set'),
+        o = s.taboption('general', form.MultiValue, 'route_address_set', _('Route Address Set'),
             _('Only supported on Linux with nftables.'));
         o.modalonly = true;
+        songbox.updateOptions('global_rule_sets', o);
         o.depends('auto_redirect', 'true');
 
-        o = s.taboption('general', form.DynamicList, 'route_exclude_address_set', _('Route Exclude Address Set'),
+        o = s.taboption('general', form.MultiValue, 'route_exclude_address_set', _('Route Exclude Address Set'),
             _('Only supported on Linux with nftables.'));
+        songbox.updateOptions('global_rule_sets', o);
         o.modalonly = true;
         o.depends('auto_redirect', 'true');
 
@@ -534,9 +561,6 @@ return view.extend({
 
         o = s.taboption('listenfields', form.Value, 'udp_timeout', _('UDP Timeout'));
         o.placeholder = '5m';
-        o.modalonly = true;
-
-        o = s.taboption('listenfields', form.Value, 'udp_timeout_stream', _('UDP Timeout Stream'));
         o.modalonly = true;
 
         o = s.taboption('listenfields', form.ListValue, 'detour', _('Detour'),
@@ -643,12 +667,12 @@ return view.extend({
         o.modalonly = true;
         o.depends('acme_enabled', '1');
 
-        o = s.taboption('general', form.Flag, 'acme_email', _('Email'),
+        o = s.taboption('general', form.Value, 'acme_email', _('Email'),
             _('The email address to use when creating or selecting an existing ACME server account.'));
         o.modalonly = true;
         o.depends('acme_enabled', '1');
 
-        o = s.taboption('general', form.DummyValue, 'acme_provider', _('Provider'));
+        o = s.taboption('general', form.Value, 'acme_provider', _('Provider'));
         o.value('letsencrypt', 'Let\'s Encrypt');
         o.value('zerossl', 'ZeroSSL');
         o.modalonly = true;
@@ -688,7 +712,7 @@ return view.extend({
         o.modalonly = true;
         o.depends('external_account', '1');
 
-        o = s.taboption('general', form.Value, 'acme_external_account_mac', _('External Account MAC'));
+        o = s.taboption('general', form.Value, 'acme_external_account_mac_key', _('External Account MAC Key'));
         o.modalonly = true;
         o.depends('external_account', '1');
 
@@ -739,18 +763,39 @@ return view.extend({
         o.rmempty = false;
         o.depends('ech_enabled', 'true');
 
+        o = s.taboption('general', form.DynamicList, 'ech_key', _('ECH Key'));
+        o.modalonly = true;
+        o.depends('ech_enabled', 'true');
+
+        o = s.taboption('general', form.Value, 'ech_key_path', _('ECH Key Path'));
+        o.modalonly = true;
+        o.depends('ech_enabled', 'true');
+
         o = s.taboption('general', form.Flag, 'reality_enabled', _('Enable Reality'));
         o.enabled = 'true';
         o.disabled = 'false';
         o.modalonly = true;
         o.depends('tls_enabled', 'true');
 
+        o = s.taboption('general', form.Value, 'reality_handshake_server', _('Handshake Server'));
+        o.placeholder = 'google.com';
+        o.rmempty = false;
+        o.depends('reality_enabled', 'true');
+        o.modalonly = true;
+
+        o = s.taboption('general', form.Value, 'reality_handshake_port', _('Handshake Port'));
+        o.placeholder = '443';
+        o.datatype = 'port';
+        o.rmempty = false;
+        o.depends('reality_enabled', 'true');
+        o.modalonly = true;
+
         o = s.taboption('general', form.Value, 'reality_private_key', _('Public Key'));
         o.modalonly = true;
         o.rmempty = false;
         o.depends('reality_enabled', 'true');
 
-        o = s.taboption('general', form.Value, 'reality_short_id', _('Short ID'),
+        o = s.taboption('general', form.DynamicList, 'reality_short_id', _('Short ID'),
             _('A hexadecimal string with zero to eight digits.'));
         o.modalonly = true;
         o.rmempty = false;
@@ -758,7 +803,7 @@ return view.extend({
 
         o = s.taboption('general', form.Value, 'reality_max_time_difference', _('Max Time Difference'),
             _('The maximum time difference between the client and the server.'));
-        o.placeholder = '5m';
+        o.placeholder = '1m';
         o.modalonly = true;
         o.depends('reality_enabled', 'true');
 
@@ -1172,8 +1217,9 @@ return view.extend({
         o.modalonly = true;
         o.depends('type', 'tuic');
 
-        o = s.taboption('general', form.MultiValue, 'outbounds', _('Outbounds'), _('List of outbound tags to select.'));
-        o.value('', _(''));
+        o = s.taboption('general', form.Flag, 'regex_enabled', _('Regex Matching Enabled'), _('Enable regex matching.'));
+
+        o = s.taboption('general', form.MultiValue, 'outbounds', _('Outbounds'), _('List of outbound tags. If regex matching is enabled, the value will be treated as a regular expression.'));
         songbox.updateOptions('outbound', o);
         o.rmempty = false;
         o.depends('type', 'selector');
@@ -1397,6 +1443,14 @@ return view.extend({
         o.rmempty = false;
         o.depends('ech_enabled', 'true');
 
+        o = s.taboption('general', form.DynamicList, 'ech_config', _('Config'), _('ECH configuration line array, in PEM format.'));
+        o.modalonly = true;
+        o.depends('ech_enabled', 'true');
+
+        o = s.taboption('general', form.Value, 'ech_config_path', _('Config Path'), _('The path to ECH configuration, in PEM format'));
+        o.modalonly = true;
+        o.depends('ech_enabled', 'true');
+
         o = s.taboption('general', form.Flag, 'utls_enabled', _('Enable UTLS'));
         o.enabled = 'true';
         o.disabled = 'false';
@@ -1512,7 +1566,7 @@ return view.extend({
         songbox.updateOptions('outbound', o);
         o.modalonly = true;
 
-        o = s.taboption('dialfields', widgets.NetworkSelect, 'bind_address', _('Bind Address'));
+        o = s.taboption('dialfields', widgets.NetworkSelect, 'bind_interface', _('Bind Interface'));
         o.modalonly = true;
 
         o = s.taboption('dialfields', form.Value, 'inet4_bind_address', _('IPv4 Bind Address'));

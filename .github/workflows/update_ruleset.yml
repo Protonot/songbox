@@ -31,7 +31,7 @@ jobs:
         id: write-python-script
         run: |
           cat <<EOF > /tmp/update_ruleset.py
-          import sys
+          import os
           import subprocess
           import requests
           import json
@@ -64,7 +64,7 @@ jobs:
               invert: Optional[bool] = None
 
               def to_dict(self) -> Dict[str, Any]:
-                return {k: v for k, v in dataclasses.asdict(self).items() if v is not None}
+                  return {k: v for k, v in dataclasses.asdict(self).items() if v is not None}
               
               @classmethod
               def parse_rule(cls, file: str) -> 'Rule':
@@ -76,8 +76,10 @@ jobs:
                       'DOMAIN-SUFFIX': 'domain_suffix',
                       'DOMAIN-KEYWORD': 'domain_keyword',
                       'DOMAIN-REGEX': 'domain_regex',
+                      'URL-REGEX': 'domain_regex',
                       'SOURCE-IP-CIDR': 'source_ip_cidr',
                       'IP-CIDR': 'ip_cidr',
+                      'IP-CIDR6': 'ip_cidr',
                       'SOURCE-PORT': 'source_port',
                       'SOURCE-PORT-RANGE': 'source_port_range',
                       'PORT': 'port',
@@ -100,7 +102,7 @@ jobs:
                           if not line or line.startswith('#'):
                               continue
                           parts = line.split(',', 2)
-                          if len(parts) <= 2:
+                          if len(parts) < 2:
                               continue
                           prefix, value = parts[:2]
                           field_name = file_map.get(prefix)
@@ -110,14 +112,20 @@ jobs:
                                   field_value = []
                                   setattr(rule, field_name, field_value)
                               if isinstance(field_value, list):
-                                  field_value.append(value)
+                                  if field_name in ('query_type', 'source_port', 'port'):
+                                      try:
+                                          field_value.append(int(value))
+                                      except ValueError:
+                                          field_value.append(value)
+                                  else:
+                                      field_value.append(value)
                               else:
                                   setattr(rule, field_name, value == 'true')
 
                   return rule
           def save_rule(rule: Rule, file: str):
-            with open(file, 'w', encoding='utf8') as f:
-                json.dump({"version": 1, "rules": [rule.to_dict()]}, f, ensure_ascii=False, indent=2)
+              with open(file, 'w', encoding='utf8') as f:
+                  json.dump({"version": 3, "rules": [rule.to_dict()]}, f, ensure_ascii=False, indent=2)
 
           response = requests.get('https://api.github.com/repos/ACL4SSR/ACL4SSR/git/trees/master').json()
           clash_tree_url = next(item['url'] for item in response['tree'] if item['path'] == 'Clash')
@@ -125,69 +133,37 @@ jobs:
           ruleset_tree_url = next(item['url'] for item in clash_tree['tree'] if item['path'] == 'Ruleset')
           ruleset_tree = requests.get(ruleset_tree_url).json()
 
+          def process_list_item(item, base_url):
+              if not item['path'].endswith('.list'):
+                  return
+              list_file = f'/tmp/{item["path"]}'
+              json_file = list_file.replace('.list', '.json')
+              srs_file = item['path'].replace('.list', '.srs')
+              url = f'{base_url}/{item["path"]}'
+              result = subprocess.run(['wget', url, '-O', list_file], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+              if result.returncode != 0:
+                  print(f'Error: {item["path"]}: {result.stderr.decode()}')
+                  return
+              save_rule(Rule.parse_rule(list_file), json_file)
+              singbox_format = subprocess.run(['sing-box', 'rule-set', 'format', json_file, '-w'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+              if singbox_format.returncode == 0:
+                  with open(json_file, 'r', encoding='utf8') as f:
+                      data = json.load(f)
+                      if 'rules' not in data:
+                          os.remove(json_file)
+                          return
+                  subprocess.run(['sing-box', 'rule-set', 'compile', json_file, '-o', srs_file])
+                  print(f'{item["path"]} generated successfully!')
+              else:
+                  print(f'Error: {item["path"]}: {singbox_format.stderr.decode()}')
+
+          base_url1 = 'https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Ruleset'
           for item in ruleset_tree['tree']:
-              if item['path'].endswith('.list'):
-                  list_file = f'/tmp/{item["path"]}'
-                  json_file = list_file.replace('.list', '.json')
-                  srs_file = item['path'].replace('.list', '.srs')
-                  url = f'https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Ruleset/{item["path"]}'
-                  subprocess.run(['wget', url, '-O', list_file])
-                  save_rule(Rule.parse_rule(list_file), json_file)
-                  singbox_format = subprocess.run(['sing-box', 'rule-set', 'format', json_file, '-w'], stdout=subprocess.PIPE)
-                  if singbox_format.returncode == 0:
-                      subprocess.run(['sing-box', 'rule-set', 'compile', json_file, '-o', srs_file])
-                      print(f'{item["path"]} generated successfully!')
-                  else:
-                      print(f'Error: {item["path"]}: {singbox_format.stdout.decode()}')
+              process_list_item(item, base_url1)
 
+          base_url2 = 'https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash'
           for item in clash_tree['tree']:
-              if item['path'].endswith('.list'):
-                  list_file = f'/tmp/{item["path"]}'
-                  json_file = list_file.replace('.list', '.json')
-                  srs_file = item['path'].replace('.list', '.srs')
-                  url = f'https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/{item["path"]}'
-                  subprocess.run(['wget', url, '-O', list_file])
-                  save_rule(Rule.parse_rule(list_file), json_file)
-                  singbox_format = subprocess.run(['sing-box', 'rule-set', 'format','-w', json_file], stdout=subprocess.PIPE)
-                  if singbox_format.returncode == 0:
-                      subprocess.run(['sing-box', 'rule-set', 'compile', json_file, '-o', srs_file])
-                      print(f'{item["path"]} generated successfully!')
-                  else:
-                      print(f'Error: {item["path"]}: {singbox_format.stdout.decode()}')response = requests.get('https://api.github.com/repos/ACL4SSR/ACL4SSR/git/trees/master').json()
-          clash_tree_url = next(item['url'] for item in response['tree'] if item['path'] == 'Clash')
-          clash_tree = requests.get(clash_tree_url).json()
-          ruleset_tree_url = next(item['url'] for item in clash_tree['tree'] if item['path'] == 'Ruleset')
-          ruleset_tree = requests.get(ruleset_tree_url).json()
-
-          for item in ruleset_tree['tree']:
-              if item['path'].endswith('.list'):
-                  list_file = f'/tmp/{item["path"]}'
-                  json_file = list_file.replace('.list', '.json')
-                  srs_file = item['path'].replace('.list', '.srs')
-                  url = f'https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Ruleset/{item["path"]}'
-                  subprocess.run(['wget', url, '-O', list_file])
-                  save_rule(Rule.parse_rule(list_file), json_file)
-                  singbox_format = subprocess.run(['sing-box', 'rule-set', 'format', json_file, '-w'], stdout=subprocess.PIPE)
-                  if singbox_format.returncode == 0:
-                      subprocess.run(['sing-box', 'rule-set', 'compile', json_file, '-o', srs_file])
-                      print(f'{item["path"]} generated successfully!')
-                  else:
-                      print(f'Error: {item["path"]}: {singbox_format.stdout.decode()}')
-
-          for item in clash_tree['tree']:
-              if item['path'].endswith('.list'):
-                  list_file = f'/tmp/{item["path"]}'
-                  json_file = list_file.replace('.list', '.json')
-                  srs_file = item['path'].replace('.list', '.srs')
-                  url = f'https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/{item["path"]}'
-                  subprocess.run(['wget', url, '-O', list_file])
-                  save_rule(Rule.parse_rule(list_file), json_file)
-                  singbox_format = subprocess.run(['sing-box', 'rule-set', 'format','-w', json_file], stdout=subprocess.PIPE)
-                  if singbox_format.returncode == 0:
-                      subprocess.run(['sing-box', 'rule-set', 'compile', json_file, '-o', srs_file])
-                      print(f'{item["path"]} generated successfully!')
-                  else:
-                      print(f'Error: {item["path"]}: {singbox_format.stdout.decode()}')
+              process_list_item(item, base_url2)
           EOF
           echo "status=success" >> "$GITHUB_OUTPUT"
 

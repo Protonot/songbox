@@ -5,7 +5,8 @@
             "uci": [ "songbox" ],
             "file": {
                 "/var/run/songbox/run.log": [ "read" ],
-                "/var/run/songbox/singbox.log": [ "read" ]
+                "/var/run/songbox/singbox.log": [ "read" ],
+                "/usr/libexec/rpcd/songbox/*": [ "exec"]
             }
         },
         "write": {
