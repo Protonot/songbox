@@ -2,7 +2,7 @@ name: Rule-Set Update
 
 on:
   schedule:
-    - cron: '0 20 * * 0'
+    - cron: '0 20 * * *'
 
 jobs:
   update:
@@ -132,7 +132,8 @@ jobs:
           def process_list_item(file_path, file, srs_path):
               # list_file = f'/tmp/{item}'
               list_file = os.path.join(file_path, file)
-              json_file = list_file.replace('.list', '.json')
+              # json_file = list_file.replace('.list', '.json')
+              json_file = f'{srs_path}/{file.replace(".list", ".json")}'
               srs_file = file.replace('.list', '.srs')
               save_rule(Rule.parse_rule(list_file), json_file)
               singbox_format = subprocess.run(['sing-box', 'rule-set', 'format', json_file, '-w'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
