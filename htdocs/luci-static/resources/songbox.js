@@ -17,15 +17,6 @@ return baseclass.extend({
         });
     },
 
-    updaterulesetOptions: function(optionName, optionInstance) {
-        L.resolveDefault(uci.load('songbox'), {}).then(function() {
-            var rule_paths = uci.get('songbox', 'geo', optionName) || [];
-            rule_paths.forEach(function(path) {
-                optionInstance.value(path, path);
-            });
-        });
-    },
-
     validateBandwidth: function(value) {
         var regex = /^\d+\s*(bps|Bps|Kbps|KBps|Mbps|MBps|Gbps|GBps|Tbps|TBps)?$/;
         if (regex.test(value)) {

@@ -271,9 +271,6 @@ return view.extend({
 
         o = s.option(form.ListValue, 'tag', _('Tag'), _('The tag of the rule set.'));
         o.rmempty = false;
-        songbox.updaterulesetOptions('geoip', o);
-        songbox.updaterulesetOptions('geosite', o);
-        songbox.updaterulesetOptions('acl4ssr', o);
 
         o = s.option(form.ListValue, 'type', _('Type'));
         o.value('local', _('Local'));

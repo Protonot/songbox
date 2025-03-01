@@ -313,16 +313,8 @@ return view.extend({
         s.sortable = true;
         s.modaltitle = _('Add Rule Set');
 
-        // var rule_option = s.option(form.ListValue, 'rule_option', _('Rule Option'));
-        // rule_option.value('geoip', _('GeoIP'));
-        // rule_option.value('geosite', _('GeoSite'));
-        // rule_option.value('acl4ssr', _('ACL4SSR'));
-
         o = s.option(form.ListValue, 'tag', _('Tag'), _('The tag of the rule set.'));
         o.rmempty = false;
-        songbox.updaterulesetOptions('geoip', o);
-        songbox.updaterulesetOptions('geosite', o);
-        songbox.updaterulesetOptions('acl4ssr', o);
 
         o = s.option(form.ListValue, 'type', _('Type'));
         o.value('local', _('Local'));
