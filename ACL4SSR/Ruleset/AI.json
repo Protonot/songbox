@@ -4,6 +4,7 @@
     {
       "domain": [
         "ai.google.dev",
+        "aistudio.google.com",
         "api.githubcopilot.com",
         "api.groq.com",
         "api.together.xyz",
@@ -21,9 +22,12 @@
         "bard.google.com",
         "chatgpt.com",
         "claude.ai",
+        "claudeusercontent.com",
         "client-api.arkoselabs.com",
         "copilot.cloud.microsoft",
         "copilot.microsoft.com",
+        "curosr.com",
+        "curosr.sh",
         "events.statsigapi.net",
         "featuregates.org",
         "gemini.google.com",
