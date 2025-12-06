@@ -13,6 +13,7 @@
         "copilot-proxy.githubusercontent.com",
         "gemini.google.com",
         "generativelanguage.googleapis.com",
+        "notebooklm.google.com",
         "sydney.bing.com"
       ],
       "domain_suffix": [
@@ -22,6 +23,7 @@
         "bard.google.com",
         "chatgpt.com",
         "claude.ai",
+        "claude.com",
         "claudeusercontent.com",
         "client-api.arkoselabs.com",
         "copilot.cloud.microsoft",
@@ -36,6 +38,7 @@
         "identrust.com",
         "intercom.io",
         "intercomcdn.com",
+        "jetbrains.ai",
         "makersuite.google.com",
         "meta.ai",
         "mistral.ai",
@@ -44,7 +47,8 @@
         "openai.com",
         "openaiapi-site.azureedge.net",
         "perplexity.ai",
-        "sora.com"
+        "sora.com",
+        "x.ai"
       ],
       "domain_keyword": [
         "anthropic",
