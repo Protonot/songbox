@@ -31,7 +31,26 @@
         "toolbarqueries.google.com",
         "tools.google.com",
         "tools.l.google.com",
-        "www-googletagmanager.l.google.com"
+        "www-googletagmanager.l.google.com",
+        "ci.android.com",
+        "g2.gstatic.com",
+        "g1.gstatic.com",
+        "g0.gstatic.com",
+        "checkin.gstatic.com",
+        "i.pki.goog",
+        "c.pki.goog",
+        "o.pki.goog",
+        "clientservices.googleapis.com",
+        "imasdk.googleapis.com",
+        "fonts.googleapis.com",
+        "update.googleapis.com",
+        "safebrowsing.googleapis.com",
+        "connectivitycheck.gstatic.com",
+        "csi.gstatic.com",
+        "fonts.gstatic.com",
+        "ssl.gstatic.com",
+        "www.gstatic.com",
+        "redirector.gvt1.com"
       ]
     }
   ]

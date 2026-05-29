@@ -11,7 +11,16 @@
         "alt6-mtalk.google.com",
         "alt7-mtalk.google.com",
         "alt8-mtalk.google.com",
-        "mtalk.google.com"
+        "mtalk.google.com",
+        "alt1.mobile-gtalk.l.google.com",
+        "alt2.mobile-gtalk.l.google.com",
+        "alt3.mobile-gtalk.l.google.com",
+        "alt4.mobile-gtalk.l.google.com",
+        "alt5.mobile-gtalk.l.google.com",
+        "alt6.mobile-gtalk.l.google.com",
+        "alt7.mobile-gtalk.l.google.com",
+        "alt8.mobile-gtalk.l.google.com",
+        "mobile-gtalk.l.google.com"
       ],
       "ip_cidr": [
         "64.233.177.188/32",
