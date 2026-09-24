@@ -373,7 +373,7 @@
         "pstatp.com",
         "toutiao.com"
       ],
-      "ip_cidr": "114.246.10.65/32",
+      "ip_cidr": "114.246.10.65",
       "process_name": "com.zhiliaoapp.musically"
     }
   ]

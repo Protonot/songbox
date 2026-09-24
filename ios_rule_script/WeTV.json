@@ -10,7 +10,7 @@
         "wetv.vip",
         "wetvinfo.com"
       ],
-      "ip_cidr": "150.109.28.51/32",
+      "ip_cidr": "150.109.28.51",
       "process_name": [
         "com.tencent.qqlivei18n",
         "com.tencent.qqlivei18n.us"
