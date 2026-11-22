@@ -17,8 +17,8 @@
         "openai.com",
         "openaiapi-site.azureedge.net",
         "sentry.io",
-        "stripe.com",
-        "sora.com"
+        "sora.com",
+        "stripe.com"
       ],
       "domain_keyword": "openai"
     }
